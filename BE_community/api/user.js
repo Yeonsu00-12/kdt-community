@@ -16,6 +16,12 @@ const readUser = () => {
     }
 }
 
+export const getProfile = (userEmail) => {
+    const users = readUser();
+    const user = users.find(user => user.email === userEmail);
+    return user ? user.profile : null;
+}
+
 export const getEmailCheck = (emailToCheck) => {
     const users = readUser();
     return users.some(user => user.email === emailToCheck);

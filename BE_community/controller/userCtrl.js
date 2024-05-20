@@ -1,4 +1,4 @@
-import {getEmailCheck ,getnameCheck, signup, login} from "../api/user.js";
+import {getEmailCheck ,getnameCheck, getProfile, signup, login} from "../api/user.js";
 
 export const auth = (req, res) => {
     if(req.cookies.userData) {
@@ -43,6 +43,27 @@ export const emailCheck = (req, res) => {
     } catch(error) {
         return res.status(500).send({message: "이메일 중복 체크 에러 : ", error: error.message});
     };
+}
+
+export const profileCheck = (req, res) => {
+    const userData = req.cookies.userData;
+
+    if (!userData) {
+        return res.status(401).json({ error: "No user logged in" });
+    }
+
+    const user = JSON.parse(userData);
+    const userEmail = user.email;
+    
+    const userProfile = getProfile(userEmail); // 이메일을 기반으로 프로필 경로를 가져옵니다.
+
+    if (userProfile) {
+        // 프로필 경로가 상대 경로일 경우 절대 경로로 변환
+        const profilePath = path.join(__dirname, '../', userProfile);
+        res.sendFile(path.resolve(profilePath));
+    } else {
+        res.status(404).json({ error: "Profile not found" });
+    }
 }
 
 export const nameCheck = (req,res) => {

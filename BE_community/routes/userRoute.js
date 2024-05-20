@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import {emailCheck,signupCtrl, nameCheck, auth, userLogin, userLogout} from '../controller/userCtrl.js';
+import {emailCheck,signupCtrl, nameCheck, auth, userLogin, userLogout, profileCheck} from '../controller/userCtrl.js';
 
 const storage = multer.diskStorage({
     destination : function(req,file,cb) {
@@ -14,12 +14,13 @@ const storage = multer.diskStorage({
 })
 
 const router = express.Router();
-const upload = multer({storage : storage})
+const upload = multer({storage : storage});
 
 router.get('/', auth);
 
 router.get('/emailCheck', emailCheck);
 router.get('/nicknameCheck', nameCheck);
+router.get('/profile', profileCheck);
 router.get('/logout', userLogout);
 
 // filename으로 명시된 이름의 파일을 전달받음

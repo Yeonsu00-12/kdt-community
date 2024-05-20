@@ -76,6 +76,13 @@
       "password": "$2b$10$fl6j0xK9XUQjhFDQGN8UI.wYUsVuURog4og4otQ22QKaXtCeDHVZO",
       "nickname": "맹구야",
       "profile": "uploads/profile/profile-1714458033953-183165563.jpeg"
+    },
+    {
+      "id": 12,
+      "email": "test@test.com",
+      "password": "$2b$10$6KfjIr4Hyo0QcFlUhAPx6uvOzIY53oQstuiyklNLHxH9FTobWCz96",
+      "nickname": "dustn",
+      "profile": "uploads/profile/profile-1715666075717-313033869.jpeg"
     }
   ]
 }
