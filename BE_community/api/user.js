@@ -1,81 +1,72 @@
-import fs from 'fs';
+// api/user.js
+import db_info from '../config/mysql.js';
+import bcrypt from 'bcrypt';
 import path from 'path';
-import bcrypt from 'bcrypt'
 
-let __dirname = path.resolve();
-const userFilePath = path.join(__dirname, '/api/user.json');
-
-const readUser = () => {
+export const getUserByEmail = async (email) => {
     try {
-        const userFile = fs.readFileSync(userFilePath, 'utf8');
-        const parsedData = JSON.parse(userFile);
-        return parsedData.users;
-    } catch(error) {
-        console.error('유저 정보를 읽지 못헀습니다.', error);
-        return [];
+        const [results] = await db_info.query('SELECT * FROM users WHERE email = ?', [email]);
+        return results.length > 0 ? results[0] : null;
+    } catch (error) {
+        console.error('Error fetching user by email: ', error);
+        throw new Error('Error fetching user by email: ' + error);
     }
-}
-
-export const getProfile = (userEmail) => {
-    const users = readUser();
-    const user = users.find(user => user.email === userEmail);
-    return user ? user.profile : null;
-}
-
-export const getEmailCheck = (emailToCheck) => {
-    const users = readUser();
-    return users.some(user => user.email === emailToCheck);
 };
 
-export const getnameCheck = (nameToCheck) => {
-    const name = readUser();
-    return name.some(user => user.nickname === nameToCheck);
+export const getProfile = async (userEmail) => {
+    const user = await getUserByEmail(userEmail);
+    return user ? user.profileImage : null;
+}
+
+export const getEmailCheck = async (emailToCheck) => {
+    const user = await getUserByEmail(emailToCheck);
+    return !!user;
 };
 
-export const signup = async({email,password,nickname,profileFilename}) => {
+export const getnameCheck = async (nameToCheck) => {
     try {
-        const userFile = fs.readFileSync(userFilePath, 'utf8');
-        const parsedData = JSON.parse(userFile);
+        const [results] = await db_info.query('SELECT * FROM users WHERE nickname = ?', [nameToCheck]);
+        return results.length > 0;
+    } catch (error) {
+        console.error('Error fetching user by nickname: ', error);
+        throw new Error('Error fetching user by nickname: ' + error);
+    }
+};
 
-        const users =  parsedData.users;
-        const newMemberId = users.length ? parseInt(users[users.length -1].id) +1 : 1;
-        const hashedPasword = await bcrypt.hash(password, 10);
-        const profileUrl = path.join('uploads','profile', profileFilename);
+export const signup = async ({ email, password, nickname, profileFilename }) => {
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const profileUrl = path.join('uploads', 'profile', profileFilename);
 
-        const newUser = {
-            id : newMemberId,
-            email : email,
-            password : hashedPasword,
-            nickname : nickname,
-            profile : profileUrl
+        const query = 'INSERT INTO users (email, password, nickname, profileImage, created_At, updated_At) VALUES (?, ?, ?, ?, NOW(), NOW())';
+        const [result] = await db_info.query(query, [email, hashedPassword, nickname, profileUrl]);
+
+        return {
+            id: result.insertId,
+            email,
+            password: hashedPassword,
+            nickname,
+            profile: profileUrl
         };
-
-        users.push(newUser);
-        fs.writeFileSync(userFilePath, JSON.stringify(parsedData, null,2), 'utf8');
-        return newUser;
-    } catch(error) {
-        console.log('회원가입 실패 : ', error);
-        throw error;
+    } catch (error) {
+        console.error('Error signing up: ', error);
+        throw new Error('Error signing up: ' + error);
     }
-}
+};
 
-export const login = async(email, password) => {
-    try{
-        const userFile = fs.readFileSync(userFilePath, 'utf8');
-        const userData = JSON.parse(userFile);
-        const users = userData.users;
-        const user = users.find(u => u.email === email);
-        if(!user) {
+export const login = async (email, password) => {
+    try {
+        const user = await getUserByEmail(email);
+        if (!user) {
             throw new Error("사용자를 찾을 수 없습니다.");
         }
         const matching = await bcrypt.compare(password, user.password);
-        if(!matching){
+        if (!matching) {
             throw new Error("비밀번호가 틀립니다!");
         }
         return user;
+    } catch (error) {
+        console.error('Error logging in: ', error);
+        throw new Error('Error logging in: ' + error);
     }
-    catch(error) {
-        console.error('로그인 에러 : ', error);
-        throw error;
-    }
-}
+};
